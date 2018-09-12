@@ -11,6 +11,9 @@ public class UserCoord {
     private double lng;
     private long date;
 
+    public UserCoord(){
+    }
+
     public UserCoord(double lat, double lng, long date){
         this.lat = lat;
         this.lng = lng;

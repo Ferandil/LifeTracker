@@ -17,36 +17,31 @@ import java.util.Collections;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 
+import kobdratenkov.ncedu.ru.lifetracker.model.RouteForTransfer;
+
 public class HttpRequestTask extends AsyncTask<Void, Void, Void> {
 
     Queue<UserCoord> userCoords = new ArrayBlockingQueue<UserCoord>(50);
+    private RouteForTransfer routeForTransfer;
 
-    public HttpRequestTask(Queue<UserCoord> userCoords){
-        this.userCoords = userCoords;
+    public HttpRequestTask(RouteForTransfer routeForTransfer){
+        this.routeForTransfer = routeForTransfer;
     }
     @Override
     protected Void doInBackground(Void... params) {
         try{
             String uRL = "http://192.168.0.100:8080/upload";
-            String uRLToLogin = "http://192.168.0.100:8080/upload/login";
             HttpHeaders headers = new HttpHeaders();
-            //headers.add("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-            UserCoord coordToSend = userCoords.peek();
-            UserCoord retCoords;
-            MultiValueMap<String, UserCoord> postBody = new LinkedMultiValueMap<String, UserCoord>();
-            postBody.add("coords", coordToSend);
+            headers.add("Authorization", "Basic " + routeForTransfer.getToken());
+            MultiValueMap<String, RouteForTransfer> postBody = new LinkedMultiValueMap<String, RouteForTransfer>();
+            postBody.add("coords", routeForTransfer);
 
             RestTemplate restTemplate = new RestTemplate();
             restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
-            HttpEntity<UserCoord> post = new HttpEntity<UserCoord>(coordToSend, headers);
+            HttpEntity<RouteForTransfer> post = new HttpEntity<RouteForTransfer>(routeForTransfer, headers);
             ResponseEntity<String> uri = restTemplate.exchange(uRL, HttpMethod.POST, post, String.class);
-
-            User loginData = new User("alex", "1234");
-            HttpEntity<User> loginDataHttpEntity = new HttpEntity<User>(loginData, headers);
-            ResponseEntity<String> uriLogin = restTemplate.exchange(uRLToLogin, HttpMethod.POST, loginDataHttpEntity, String.class);
-
             uRL = "";
         }catch(Exception ex){
             ex.printStackTrace();

@@ -7,6 +7,7 @@ import java.io.FileWriter;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.util.Calendar;
 import java.util.Iterator;
 import java.util.Queue;
 
@@ -17,6 +18,8 @@ import android.util.Log;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import static android.icu.lang.UCharacter.GraphemeClusterBreak.L;
 
 public class Writer implements Runnable{
     Queue<UserCoord> dataQueue;
@@ -33,40 +36,28 @@ public class Writer implements Runnable{
         String jsonString;
         UserCoord userCoord;
         File sdFile = null;
-        File file = new File("/Android/data/lifetracker","userData");
+        String addToFileName =((Long)Calendar.getInstance().getTimeInMillis()).toString();
+        String fileName = "userData" + addToFileName + ".txt";
+        /*File file = new File("/Android/data/lifetracker",fileName);
 
         String testfilepath;
 
-        if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
-            File sdPath = Environment.getExternalStorageDirectory();
-            sdPath = new File(sdPath.getAbsolutePath() + "/" + "lifeTracker");
-            sdPath.mkdirs();
-            sdFile = new File(sdPath, "userCoord.txt");
-        }
         if(!file.exists()){
             try {
                 file.createNewFile();
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+        }*/
         try {
-            BufferedWriter sdBufferedWriter = null;
-            BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(context.openFileOutput("userData.txt", Context.MODE_APPEND)));
-            if(sdFile != null){
-                sdBufferedWriter = new BufferedWriter(new FileWriter(sdFile,true));
-            }
+            BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(context.openFileOutput(fileName, Context.MODE_APPEND)));
             Iterator<UserCoord> queueIterator = dataQueue.iterator();
             while(queueIterator.hasNext()){
                 userCoord = queueIterator.next();
                 jsonString = mapper.writeValueAsString(userCoord) + "\n";
                 bufferedWriter.write(jsonString);
-                if(sdFile != null){
-                    sdBufferedWriter.write(jsonString);
-                }
                 dataQueue.poll();
             }
-            sdBufferedWriter.close();
             bufferedWriter.close();
         } catch (FileNotFoundException e) {
             e.printStackTrace();

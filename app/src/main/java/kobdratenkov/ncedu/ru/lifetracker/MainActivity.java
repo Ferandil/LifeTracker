@@ -2,8 +2,11 @@ package kobdratenkov.ncedu.ru.lifetracker;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.AsyncTask;
+import android.os.Build;
+import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -17,10 +20,15 @@ import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 
+import kobdratenkov.ncedu.ru.lifetracker.model.Coordinate;
+import kobdratenkov.ncedu.ru.lifetracker.model.Route;
+import kobdratenkov.ncedu.ru.lifetracker.model.RouteForTransfer;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -32,6 +40,7 @@ public class MainActivity extends AppCompatActivity {
     private StringBuilder GPS;
     private StringBuffer Net;
     private Queue<UserCoord> coordsQueue;
+    private String token;
     int step = 0;
     final int LOCKATION_PERMISSION = 0;
     final int SAVE_PERMISSION = 1;
@@ -44,8 +53,10 @@ public class MainActivity extends AppCompatActivity {
         statusNet = findViewById(R.id.enabledNet);
         coordGPS = findViewById(R.id.coordGPS);
         coordNet = findViewById(R.id.coordNet);
-        coordsQueue = new ArrayBlockingQueue<UserCoord>(50);
+        coordsQueue = new ArrayBlockingQueue<UserCoord>(60);
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+        boolean rez = false;
+
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ) {
             if(ActivityCompat.shouldShowRequestPermissionRationale(this,Manifest.permission.WRITE_EXTERNAL_STORAGE)){
             }
@@ -54,7 +65,8 @@ public class MainActivity extends AppCompatActivity {
             }
             return;
         }
-
+        Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+        startActivityForResult(intent, 101);
     }
 
     @Override
@@ -89,7 +101,7 @@ public class MainActivity extends AppCompatActivity {
             showLocation(location);
             coordsQueue.add(new UserCoord(location.getLatitude(), location.getLongitude(), location.getTime()));
             ++step;
-            if (step >= 5) {
+            if (step >= 40) {
                 new Writer(getApplicationContext(), coordsQueue).run();
                 step = 0;
             }
@@ -162,12 +174,34 @@ public class MainActivity extends AppCompatActivity {
         new Writer(getApplicationContext(), coordsQueue).run();
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     private void onClickSendButton() {
-        new HttpRequestTask(coordsQueue).execute();
+        locationManager.removeUpdates(locationListener);
+        List<Route> userRoutesFromFile = new ArrayList<>();
+        Reader reader = new Reader(getApplicationContext(), userRoutesFromFile);
+        reader.run();
+        TokenReader tokenReader = new TokenReader(getApplicationContext());
+        //while(reader.getSuccessfulReading() != 1 || reader.getSuccessfulReading() != 0){continue;}
+        //while (tokenReader.getToken() != null || tokenReader.getToken() != ""){continue;}
+        RouteForTransfer routeForTransfer = new RouteForTransfer();
+        routeForTransfer.addAllroutesToList(userRoutesFromFile);
+        routeForTransfer.setToken(tokenReader.getToken());
+        if(coordsQueue.isEmpty()){
+            new HttpRequestTask(routeForTransfer).execute();
+        }else{
+            Route lastRoute = new Route();
+            for(UserCoord userCoord : coordsQueue.toArray(new UserCoord[0])){
+                lastRoute.addCoordinate(new Coordinate(userCoord));
+            }
+            routeForTransfer.addRouteToList(lastRoute);
+            new HttpRequestTask(routeForTransfer).execute();
+        }
+
         //HttpEntity<UserCoord> requestBody = new HttpEntity<>(coordToSend, headers);
         //restTemplate.put("http://localhost:7474/upload", requestBody, new Object[]{});
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     public void onClick(View view) {
         switch (view.getId()){
             case R.id.startButton:
@@ -175,8 +209,10 @@ public class MainActivity extends AppCompatActivity {
                 break;
             case R.id.stopButton:
                 onClickStopButton();
+                break;
             case R.id.sendButton:
                 onClickSendButton();
+                break;
         }
     }
 }
