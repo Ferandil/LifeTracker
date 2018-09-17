@@ -23,14 +23,16 @@ public class HttpRequestTask extends AsyncTask<Void, Void, Void> {
 
     Queue<UserCoord> userCoords = new ArrayBlockingQueue<UserCoord>(50);
     private RouteForTransfer routeForTransfer;
+    private String serverIp = "192.168.0.100";
 
-    public HttpRequestTask(RouteForTransfer routeForTransfer){
+    public HttpRequestTask(RouteForTransfer routeForTransfer, String serverIp){
         this.routeForTransfer = routeForTransfer;
+        this.serverIp = serverIp;
     }
     @Override
     protected Void doInBackground(Void... params) {
         try{
-            String uRL = "http://192.168.0.100:8080/upload";
+            String uRL = "http://"+ serverIp +":8080/upload";
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));

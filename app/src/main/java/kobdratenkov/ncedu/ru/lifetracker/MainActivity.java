@@ -12,6 +12,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.location.*;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
 import org.springframework.http.HttpEntity;
@@ -36,27 +37,38 @@ public class MainActivity extends AppCompatActivity {
     private TextView statusGPS;
     private TextView coordGPS;
     private TextView coordNet;
+    private Button startButton;
+    private Button stopButton;
     private LocationManager locationManager;
     private StringBuilder GPS;
     private StringBuffer Net;
     private Queue<UserCoord> coordsQueue;
     private String token;
+    private String serverIp;
     int step = 0;
     final int LOCKATION_PERMISSION = 0;
     final int SAVE_PERMISSION = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        serverIp = "192.168.0.100";
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         statusGPS = findViewById(R.id.enabledGPS);
         statusNet = findViewById(R.id.enabledNet);
         coordGPS = findViewById(R.id.coordGPS);
         coordNet = findViewById(R.id.coordNet);
+        startButton = findViewById(R.id.startButton);
+        stopButton = findViewById(R.id.stopButton);
         coordsQueue = new ArrayBlockingQueue<UserCoord>(60);
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         boolean rez = false;
-
+        //Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+        //startActivityForResult(intent, 101);
+        Bundle bundle = getIntent().getExtras();
+        if(bundle != null){
+            serverIp = bundle.getString("ip");
+        }
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ) {
             if(ActivityCompat.shouldShowRequestPermissionRationale(this,Manifest.permission.WRITE_EXTERNAL_STORAGE)){
             }
@@ -65,14 +77,13 @@ public class MainActivity extends AppCompatActivity {
             }
             return;
         }
-        Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-        startActivityForResult(intent, 101);
+
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        onClickStartButton(null);
+        //onClickStartButton(null);
         checkEnabled();
     }
 
@@ -165,12 +176,16 @@ public class MainActivity extends AppCompatActivity {
         }
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
         locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
+        startButton.setVisibility(View.INVISIBLE);
+        stopButton.setVisibility(View.VISIBLE);
         showLocation(locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER));
         checkEnabled();
     }
 
     private void onClickStopButton(){
         locationManager.removeUpdates(locationListener);
+        stopButton.setVisibility(View.INVISIBLE);
+        startButton.setVisibility(View.VISIBLE);
         new Writer(getApplicationContext(), coordsQueue).run();
     }
 
@@ -181,20 +196,22 @@ public class MainActivity extends AppCompatActivity {
         Reader reader = new Reader(getApplicationContext(), userRoutesFromFile);
         reader.run();
         TokenReader tokenReader = new TokenReader(getApplicationContext());
+        tokenReader.run();
         //while(reader.getSuccessfulReading() != 1 || reader.getSuccessfulReading() != 0){continue;}
         //while (tokenReader.getToken() != null || tokenReader.getToken() != ""){continue;}
         RouteForTransfer routeForTransfer = new RouteForTransfer();
         routeForTransfer.addAllroutesToList(userRoutesFromFile);
         routeForTransfer.setToken(tokenReader.getToken());
+
         if(coordsQueue.isEmpty()){
-            new HttpRequestTask(routeForTransfer).execute();
+            new HttpRequestTask(routeForTransfer, serverIp).execute();
         }else{
             Route lastRoute = new Route();
             for(UserCoord userCoord : coordsQueue.toArray(new UserCoord[0])){
                 lastRoute.addCoordinate(new Coordinate(userCoord));
             }
             routeForTransfer.addRouteToList(lastRoute);
-            new HttpRequestTask(routeForTransfer).execute();
+            new HttpRequestTask(routeForTransfer, serverIp).execute();
         }
 
         //HttpEntity<UserCoord> requestBody = new HttpEntity<>(coordToSend, headers);
