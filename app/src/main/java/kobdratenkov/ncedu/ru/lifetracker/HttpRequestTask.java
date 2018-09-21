@@ -36,7 +36,7 @@ public class HttpRequestTask extends AsyncTask<Void, Void, Void> {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-            headers.add("Authorization", "Basic " + routeForTransfer.getToken());
+            headers.add("Authorization", routeForTransfer.getToken());
             MultiValueMap<String, RouteForTransfer> postBody = new LinkedMultiValueMap<String, RouteForTransfer>();
             postBody.add("coords", routeForTransfer);
 

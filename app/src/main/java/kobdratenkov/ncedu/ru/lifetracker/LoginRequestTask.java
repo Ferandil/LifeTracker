@@ -16,7 +16,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.client.RestTemplate;
 
@@ -24,8 +23,8 @@ import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
 import java.util.Collections;
-import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 
@@ -62,18 +61,25 @@ public class LoginRequestTask extends AsyncTask<String, Void, Boolean> {
         restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-        headers.add("Authorization", "Basic" + encodedData);
+        /*headers.add("email", loginData.getLogin());
+        headers.add("password", loginData.getHashPassword());*/
+        HttpEntity<String> logindate = new HttpEntity<>(null, headers);
         HttpEntity<User> dataForTransfer = new HttpEntity<>(loginData, headers);
         HttpEntity<String> loginDataHttpEntity = new HttpEntity<String>(headers);
-        ResponseEntity<User> uriLogin = null;
+        headers.add("Authentification", "");
+        //ResponseEntity<User> uriLogin = null;
+        ResponseEntity<String> uriLogin;
         try{
             //uriLogin = restTemplate.exchange(url, HttpMethod.GET, loginDataHttpEntity, String.class);
-            uriLogin = restTemplate.exchange(uRLToLogin, HttpMethod.POST, dataForTransfer, User.class);
+            //uriLogin = restTemplate.exchange(uRLToLogin, HttpMethod.POST, dataForTransfer, User.class);
+            String test = dataForTransfer.toString();
+            uriLogin = restTemplate.exchange(uRLToLogin, HttpMethod.POST, dataForTransfer, String.class);
             BufferedWriter writer = null;
+            test.charAt(2);
             if(uriLogin.getStatusCode().equals(HttpStatus.OK)){
                 try {
                     writer = new BufferedWriter(new OutputStreamWriter(context.openFileOutput("token.txt", Context.MODE_PRIVATE)));
-                    writer.write(uriLogin.getBody().getLogin());
+                    writer.write(uriLogin.getHeaders().getFirst("Authorization"));
                     writer.close();
                 } catch (FileNotFoundException e) {
                 } catch (IOException e) {

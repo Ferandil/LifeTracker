@@ -1,26 +1,35 @@
 package kobdratenkov.ncedu.ru.lifetracker;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.io.Serializable;
+import java.util.List;
+
+import kobdratenkov.ncedu.ru.lifetracker.model.Role;
 
 
 public class User implements Serializable {
 
     private Long userID;
 
-    private String login;
+    private String email;
 
-    private String hashPassword;
+    private String password;
 
-    private String firstName;
+    private String name;
 
-    private String lastName;
+    private String surname;
+
+    private Role role;
+
+    private boolean facebook;
 
     public User() {
     }
 
-    public User(String login, String hashPassword) {
-        this.login = login;
-        this.hashPassword = hashPassword;
+    public User(String login, String password) {
+        this.email = login;
+        this.password = password;
     }
 
 
@@ -36,41 +45,38 @@ public class User implements Serializable {
         this.userID = userID;
     }
 
-    public String getLogin() {
-        return login;
+    public String getPassword() {
+        return password;
     }
 
-    public void setLogin(String login) {
-        this.login = login;
+    public void setPassword(String hashPassword) {
+        this.password = hashPassword;
     }
 
-    public String getHashPassword() {
-        return hashPassword;
+    public String getName() {
+        return name;
     }
 
-    public void setHashPassword(String hashPassword) {
-        this.hashPassword = hashPassword;
+    public void setName(String firstName) {
+        this.name = firstName;
     }
 
-    public String getFirstName() {
-        return firstName;
+    public String getSurname() {
+        return surname;
     }
 
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
+    public void setSurname(String lastName) {
+        this.surname = lastName;
     }
 
-    public String getLastName() {
-        return lastName;
-    }
+    public String getEmail() { return this.email; }
 
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
+    public void setEmail(String email) { this.email = email; }
+
 
     @Override
     public String toString(){
-        return String.format(" User: id = %d, login = '%s', password = '%s'", userID, login, hashPassword);
+        return String.format(" User: id = %d, login = '%s', password = '%s'", userID, email, password);
     }
 }
 

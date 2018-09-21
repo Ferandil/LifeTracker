@@ -11,12 +11,12 @@ public class Route {
 
     private Long routeID;
 
-    private List<Coordinate> coordinates;
+    private List<Coordinate> route;
 
     private Long userID;
 
     public Route() {
-        coordinates = new ArrayList<Coordinate>();
+        route = new ArrayList<Coordinate>();
     }
 
     public Route(Long userID) {
@@ -24,13 +24,13 @@ public class Route {
     }
 
     public Route(List<Coordinate> coordinates, Long userID) {
-        this.coordinates = coordinates;
+        this.route = coordinates;
         this.userID = userID;
     }
 
     public String toString() {
         return String.format(" Route: id = %d, user = '%d', number of coords = '%d'",
-                routeID, userID, coordinates.size());
+                routeID, userID, route.size());
     }
 
     /**
@@ -39,18 +39,18 @@ public class Route {
      */
 
     public void addCoordinate(Coordinate next) {
-        if (coordinates == null) {
-            coordinates = new ArrayList<>();
+        if (route == null) {
+            route = new ArrayList<>();
         }
-        coordinates.add(next);
+        route.add(next);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     public void addAllCoordinates(Iterable<Coordinate> nextCoordinates) {
-        if (coordinates == null) {
-            coordinates = new ArrayList<>();
+        if (route == null) {
+            route = new ArrayList<>();
         }
-        nextCoordinates.forEach(coordinates::add);
+        nextCoordinates.forEach(route::add);
     }
 
 
@@ -64,12 +64,12 @@ public class Route {
     }
 
 
-    public List<Coordinate> getCoordinates() {
-        return coordinates;
+    public List<Coordinate> getRoute() {
+        return route;
     }
 
-    public void setCoordinates(List<Coordinate> coordinates) {
-        this.coordinates = coordinates;
+    public void setRoute(List<Coordinate> coordinates) {
+        this.route = coordinates;
     }
 
     public Long getUserID() {
